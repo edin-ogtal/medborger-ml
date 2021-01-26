@@ -1,7 +1,4 @@
 import torch
-#from torch import nn
-#import torch.utils.data
-#import torch.utils.data.distributed
 from torch.utils.data import Dataset
 
 class MedborgerDataset(Dataset):

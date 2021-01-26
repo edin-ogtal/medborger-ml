@@ -4,7 +4,6 @@ from transformers import AutoTokenizer, AutoModel
 import torch.nn as nn
 
 
-#PRE_TRAINED_MODEL_NAME = 'Rostlab/prot_bert_bfd_localization'
 model_checkpoint = 'Maltehb/-l-ctra-danish-electra-small-uncased'
 class TextClassifier(nn.Module):
     def __init__(self, num_labels):
@@ -21,6 +20,3 @@ class TextClassifier(nn.Module):
         labels = labels,
       )
       return output
-
-#class RNNModel(nn.Module):
-#    pass
