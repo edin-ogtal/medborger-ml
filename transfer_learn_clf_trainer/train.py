@@ -29,13 +29,6 @@ def get_encoded_data(data_loader_script, tokenizer):
     return(encoded_dataset)
 
 
-def save_model(model, model_dir):
-    path = os.path.join(model_dir, 'model.pth')
-    # recommended way from http://pytorch.org/docs/master/notes/serialization.html
-    torch.save(model.state_dict(), path)
-    #logger.info(f"Saving model: {path} \n")
-
-
 def train(args):
     use_cuda = args.num_gpus > 0
     device = torch.device("cuda" if use_cuda else "cpu")
@@ -135,4 +128,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    t = train(args)
+    train(args)
