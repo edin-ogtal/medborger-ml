@@ -29,6 +29,13 @@ def get_encoded_data(data_loader_script, tokenizer):
     return(encoded_dataset)
 
 
+def save_model(model, model_dir):
+    path = os.path.join(model_dir, 'model.pth')
+    # recommended way from http://pytorch.org/docs/master/notes/serialization.html
+    torch.save(model.state_dict(), path)
+    #logger.info(f"Saving model: {path} \n")
+
+
 def train(args):
     use_cuda = args.num_gpus > 0
     device = torch.device("cuda" if use_cuda else "cpu")
@@ -52,7 +59,7 @@ def train(args):
         learning_rate=1e-4,
         per_device_train_batch_size=args.batch_size,
         per_device_eval_batch_size=args.test_batch_size,
-        num_train_epochs=2,
+        num_train_epochs=1,
         weight_decay=0.01,
         load_best_model_at_end=True,
         metric_for_best_model=metric_name,
@@ -74,8 +81,11 @@ def train(args):
 
     trainer.train()
 
-
     print(trainer.predict(encoded_dataset['test']).metrics)
+
+    trainer.save_model()
+
+    return(trainer)
 
 
 
@@ -114,15 +124,15 @@ if __name__ == "__main__":
     # Container environment
     #parser.add_argument("--hosts", type=list, default=json.loads(os.environ["SM_HOSTS"]))
     #parser.add_argument("--current-host", type=str, default=os.environ["SM_CURRENT_HOST"])
-    #parser.add_argument("--model-dir", type=str, default=os.environ["SM_MODEL_DIR"])
+    parser.add_argument("--model-dir", type=str, default=os.environ["SM_MODEL_DIR"])
     parser.add_argument("--data-dir", type=str, default=os.environ["SM_CHANNEL_DATA"])
     #parser.add_argument("--data-dir", type=str, default='.')
 
     #parser.add_argument("--test", type=str, default=os.environ["SM_CHANNEL_TESTING"])
-    #parser.add_argument("--num-gpus", type=int, default=os.environ["SM_NUM_GPUS"])
-    parser.add_argument("--num-gpus", type=int, default=False)
+    parser.add_argument("--num-gpus", type=int, default=os.environ["SM_NUM_GPUS"])
+    #parser.add_argument("--num-gpus", type=int, default=False)
 
 
     args = parser.parse_args()
 
-    train(args)
+    t = train(args)
