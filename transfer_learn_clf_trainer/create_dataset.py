@@ -37,5 +37,5 @@ class MedborgerDataset(datasets.GeneratorBasedBuilder):
                     pass
                 else:
                     label, text = row
-                    label = int(label) - 1                
+                    label = int(label)                
                     yield id_, {"text": text, "label": label}
