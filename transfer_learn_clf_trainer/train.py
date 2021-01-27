@@ -78,7 +78,7 @@ def train(args):
 
     print('started saving')
 
-    trainer.save_model()
+    trainer.save_model(args.model_dir)
 
     print('done saving')
 
