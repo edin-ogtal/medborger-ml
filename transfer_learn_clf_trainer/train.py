@@ -4,7 +4,8 @@ import os
 
 import numpy as np
 import torch
-from transformers import AutoTokenizer, get_linear_schedule_with_warmup,AutoModelForSequenceClassification,TrainingArguments, Trainer
+from transformers import AutoTokenizer,AutoModelForSequenceClassification
+from transformers TrainingArguments, Trainer
 
 from datasets import load_dataset, load_metric
 
@@ -112,7 +113,7 @@ if __name__ == "__main__":
 
     # Container environment
     #parser.add_argument("--hosts", type=list, default=json.loads(os.environ["SM_HOSTS"]))
-    parser.add_argument("--current-host", type=str, default=os.environ["SM_CURRENT_HOST"])
+    #parser.add_argument("--current-host", type=str, default=os.environ["SM_CURRENT_HOST"])
     #parser.add_argument("--model-dir", type=str, default=os.environ["SM_MODEL_DIR"])
     parser.add_argument("--data-dir", type=str, default=os.environ["SM_CHANNEL_TRAINING"])
     #parser.add_argument("--data-dir", type=str, default='.')
