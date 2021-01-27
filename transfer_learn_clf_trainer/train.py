@@ -5,7 +5,7 @@ import os
 import numpy as np
 import torch
 from transformers import AutoTokenizer,AutoModelForSequenceClassification
-from transformers TrainingArguments, Trainer
+from transformers import TrainingArguments, Trainer
 
 from datasets import load_dataset, load_metric
 
