@@ -76,9 +76,11 @@ def train(args):
 
     print(trainer.predict(encoded_dataset['test']).metrics)
 
+    print('started saving')
+
     trainer.save_model()
 
-    return(trainer)
+    print('done saving')
 
 
 
