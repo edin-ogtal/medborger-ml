@@ -18,9 +18,9 @@ class MedborgerDataset(datasets.GeneratorBasedBuilder):
         )
 
     def _split_generators(self, dl_manager):
-        train_path = dl_manager.download_and_extract(os.path.join(os.environ["SM_CHANNEL_TRAINING"], 'train.csv'))
-        eval_path = dl_manager.download_and_extract(os.path.join(os.environ["SM_CHANNEL_VALIDATING"],'valid.csv'))
-        test_path = dl_manager.download_and_extract(os.path.join(os.environ["SM_CHANNEL_TESTING"],'test.csv'))
+        train_path = dl_manager.download_and_extract(os.path.join(os.environ["SM_CHANNEL_DATA"], 'train.csv'))
+        eval_path = dl_manager.download_and_extract(os.path.join(os.environ["SM_CHANNEL_DATA"],'valid.csv'))
+        test_path = dl_manager.download_and_extract(os.path.join(os.environ["SM_CHANNEL_DATA"],'test.csv'))
         return [
             datasets.SplitGenerator(name=datasets.Split.TRAIN, gen_kwargs={"filepath": train_path}),
             datasets.SplitGenerator(name=datasets.Split.VALIDATION, gen_kwargs={"filepath": eval_path}),
