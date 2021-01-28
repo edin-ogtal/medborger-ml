@@ -134,3 +134,4 @@ custom_bert/*
 lstm-lm/*
 
 imdb_transformers/*
+*checkpoint-*
