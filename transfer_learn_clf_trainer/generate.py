@@ -38,36 +38,42 @@ def input_fn(serialized_input_data, request_content_type):
         print("================ input sentences ===============")
         print(data)
         
-        if isinstance(data, str):
-            data = [data]
-        elif isinstance(data, list) and len(data) > 0 and isinstance(data[0], str):
-            pass
-        else:
-            raise ValueError("Unsupported input type. Input type can be a string or an non-empty list. \
-                             I got {}".format(data))
+        #if isinstance(data, str):
+        #    data = [data]
+        #elif isinstance(data, list) and len(data) > 0 and isinstance(data[0], str):
+        #    pass
+        #else:
+        #    raise ValueError("Unsupported input type. Input type can be a string or an non-empty list. \
+        #                     I got {}".format(data))
                        
         #encoded = [tokenizer.encode(x, add_special_tokens=True) for x in data]
         #encoded = tokenizer(data, add_special_tokens=True) 
         
         # for backward compatibility use the following way to encode 
         # https://github.com/huggingface/transformers/issues/5580
-        input_ids = [tokenizer.encode(x, add_special_tokens=True) for x in data]
         
+        encoded_data = tokenizer(data['text'], return_tensors='pt')
+        #input_ids = [tokenizer.encode(x, add_special_tokens=True) for x in data]
+        
+        input_ids = encoded_data['input_ids']
+        input_mask = encoded_data['attention_mask']
+
         print("================ encoded sentences ==============")
+        
         print(input_ids)
 
         # pad shorter sentence
-        padded =  torch.zeros(len(input_ids), MAX_LEN) 
-        for i, p in enumerate(input_ids):
-            padded[i, :len(p)] = torch.tensor(p)
+        #padded =  torch.zeros(len(input_ids), MAX_LEN) 
+        #for i, p in enumerate(input_ids):
+        #    padded[i, :len(p)] = torch.tensor(p)
      
         # create mask
-        mask = (padded != 0)
+        #mask = (padded != 0)
         
         print("================= padded input and attention mask ================")
-        print(padded, '\n', mask)
+        print(input_ids, '\n', input_mask)
 
-        return padded.long(), mask.long()
+        return input_ids, input_mask
     raise ValueError("Unsupported content type: {}".format(request_content_type))
 
 
