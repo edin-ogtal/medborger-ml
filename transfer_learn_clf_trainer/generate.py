@@ -6,18 +6,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 tokenizer = AutoTokenizer.from_pretrained("Maltehb/-l-ctra-danish-electra-small-uncased", use_fast=True)
 
-#import json
-#import logging
-#import os
-
-#import torch
-#from rnn import RNNModel
-
-#import data
-
 JSON_CONTENT_TYPE = 'application/json'
-
-#logger = logging.getLogger(__name__)
 
 
 def model_fn(model_dir):
@@ -37,23 +26,8 @@ def input_fn(serialized_input_data, request_content_type):
         data = json.loads(serialized_input_data)
         print("================ input sentences ===============")
         print(data)
-        
-        #if isinstance(data, str):
-        #    data = [data]
-        #elif isinstance(data, list) and len(data) > 0 and isinstance(data[0], str):
-        #    pass
-        #else:
-        #    raise ValueError("Unsupported input type. Input type can be a string or an non-empty list. \
-        #                     I got {}".format(data))
-                       
-        #encoded = [tokenizer.encode(x, add_special_tokens=True) for x in data]
-        #encoded = tokenizer(data, add_special_tokens=True) 
-        
-        # for backward compatibility use the following way to encode 
-        # https://github.com/huggingface/transformers/issues/5580
-        
+                
         encoded_data = tokenizer(data['text'], return_tensors='pt')
-        #input_ids = [tokenizer.encode(x, add_special_tokens=True) for x in data]
         
         input_id = encoded_data['input_ids']
         input_mask = encoded_data['attention_mask']
@@ -61,14 +35,6 @@ def input_fn(serialized_input_data, request_content_type):
         print("================ encoded sentences ==============")
         
         print(input_id)
-
-        # pad shorter sentence
-        #padded =  torch.zeros(len(input_ids), MAX_LEN) 
-        #for i, p in enumerate(input_ids):
-        #    padded[i, :len(p)] = torch.tensor(p)
-     
-        # create mask
-        #mask = (padded != 0)
         
         print("================= padded input and attention mask ================")
         print(input_id, '\n', input_mask)

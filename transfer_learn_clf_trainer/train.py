@@ -124,8 +124,8 @@ if __name__ == "__main__":
     #parser.add_argument("--data-dir", type=str, default='.')
 
     #parser.add_argument("--test", type=str, default=os.environ["SM_CHANNEL_TESTING"])
-    parser.add_argument("--num-gpus", type=int, default=os.environ["SM_NUM_GPUS"])
-    #parser.add_argument("--num-gpus", type=int, default=False)
+    #parser.add_argument("--num-gpus", type=int, default=os.environ["SM_NUM_GPUS"])
+    parser.add_argument("--num-gpus", type=int, default=False)
 
 
     args = parser.parse_args()
