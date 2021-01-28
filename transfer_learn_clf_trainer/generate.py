@@ -14,7 +14,7 @@ tokenizer = AutoTokenizer.from_pretrained("Maltehb/-l-ctra-danish-electra-small-
 
 #import data
 
-#JSON_CONTENT_TYPE = 'application/json'
+JSON_CONTENT_TYPE = 'application/json'
 
 #logger = logging.getLogger(__name__)
 
