@@ -52,15 +52,15 @@ def input_fn(serialized_input_data, request_content_type):
         # for backward compatibility use the following way to encode 
         # https://github.com/huggingface/transformers/issues/5580
         
-        encoded_data = tokenizer(data['text'])
+        encoded_data = tokenizer(data['text'], return_tensors='pt')
         #input_ids = [tokenizer.encode(x, add_special_tokens=True) for x in data]
         
-        input_ids = encoded_data['input_ids']
+        input_id = encoded_data['input_ids']
         input_mask = encoded_data['attention_mask']
 
         print("================ encoded sentences ==============")
         
-        print(input_ids)
+        print(input_id)
 
         # pad shorter sentence
         #padded =  torch.zeros(len(input_ids), MAX_LEN) 
@@ -71,9 +71,9 @@ def input_fn(serialized_input_data, request_content_type):
         #mask = (padded != 0)
         
         print("================= padded input and attention mask ================")
-        print(input_ids, '\n', input_mask)
+        print(input_id, '\n', input_mask)
 
-        return input_ids, input_mask
+        return input_id, input_mask
     raise ValueError("Unsupported content type: {}".format(request_content_type))
 
 
@@ -100,5 +100,6 @@ def predict_fn(input_data, model):
         print("=============== inference result =================")
         print(y)
         probs = y.softmax(1).tolist()
+        print(probs)
     return probs
 
