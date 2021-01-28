@@ -52,7 +52,7 @@ def input_fn(serialized_input_data, request_content_type):
         # for backward compatibility use the following way to encode 
         # https://github.com/huggingface/transformers/issues/5580
         
-        encoded_data = tokenizer(data['text'], return_tensors='pt')
+        encoded_data = tokenizer(data['text'])
         #input_ids = [tokenizer.encode(x, add_special_tokens=True) for x in data]
         
         input_ids = encoded_data['input_ids']
@@ -99,5 +99,6 @@ def predict_fn(input_data, model):
         y = model(input_id, attention_mask=input_mask)[0]
         print("=============== inference result =================")
         print(y)
-    return y
+        probs = y.softmax(1).tolist()
+    return probs
 
