@@ -1,8 +1,7 @@
 import os
 import json
 import torch
-
-import pandas as pd
+import csv
 
 from io import StringIO
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
@@ -45,10 +44,19 @@ def input_fn(serialized_input_data, request_content_type):
         return input_id, input_mask
     elif request_content_type == 'text/csv':
         # Read the raw input data as CSV.
-        df = pd.read_csv(StringIO(serialized_input_data), 
-                         header=None, sep='\t')
 
-        encoded_data = tokenizer(df[1].to_list(), return_tensors='pt', padding=True)
+        data_list = []
+
+        #df = pd.read_csv(StringIO(serialized_input_data), 
+        #                 header=None, sep='\t')
+
+        f = open(StringIO(serialized_input_data), newline='')
+        reader = csv.reader(f, delimiter='\t')
+        for i in reader:
+            data_list.append(i[1])
+        f.close()
+
+        encoded_data = tokenizer(data_list, return_tensors='pt', padding=True)
 
         input_id = encoded_data['input_ids']
         input_mask = encoded_data['attention_mask']
