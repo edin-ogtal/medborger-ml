@@ -4,6 +4,7 @@ import torch
 
 import pandas as pd
 
+from io import StringIO
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 tokenizer = AutoTokenizer.from_pretrained("Maltehb/-l-ctra-danish-electra-small-uncased", use_fast=True)
