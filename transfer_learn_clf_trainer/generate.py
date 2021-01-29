@@ -50,7 +50,7 @@ def input_fn(serialized_input_data, request_content_type):
         #df = pd.read_csv(StringIO(serialized_input_data), 
         #                 header=None, sep='\t')
 
-        f = open(StringIO(serialized_input_data), newline='')
+        f = open(serialized_input_data, newline='')
         reader = csv.reader(f, delimiter='\t')
         for i in reader:
             data_list.append(i[1])
