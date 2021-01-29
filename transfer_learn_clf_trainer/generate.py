@@ -53,7 +53,7 @@ def input_fn(serialized_input_data, request_content_type):
         print(serialized_input_data)
         print(type(serialized_input_data))
         print('STARTED encoding')
-        encoded_data = tokenizer(serialized_input_data, return_tensors='pt', padding=True)
+        encoded_data = tokenizer(serialized_input_data, return_tensors='pt', padding=True, truncation=True, max_length=512)
 
         print('Done encoding')
         input_id = encoded_data['input_ids']
@@ -88,6 +88,6 @@ def predict_fn(input_data, model):
         print("=============== inference result =================")
         #print(y)
         probs = y.softmax(1).tolist()
-        #print(probs)
+        print(probs)
     return probs
 
