@@ -51,6 +51,7 @@ def input_fn(serialized_input_data, request_content_type):
         #df = pd.read_csv(StringIO(serialized_input_data), 
         #                 header=None, sep='\t')
         print('STARTED openinig data')
+        print(serialized_input_data)
         f = open(serialized_input_data, newline='')
         print('STARTED opened file')
         reader = csv.reader(f, delimiter='\t')
