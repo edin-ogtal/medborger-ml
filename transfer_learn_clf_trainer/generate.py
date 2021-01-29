@@ -45,20 +45,26 @@ def input_fn(serialized_input_data, request_content_type):
         return input_id, input_mask
     elif request_content_type == 'text/csv':
         # Read the raw input data as CSV.
-
+        print('STARTED creating data_list')
         data_list = []
 
         #df = pd.read_csv(StringIO(serialized_input_data), 
         #                 header=None, sep='\t')
-
+        print('STARTED openinig data')
         f = open(serialized_input_data, newline='')
+        print('STARTED opened file')
         reader = csv.reader(f, delimiter='\t')
+        print('STARTED loop')
         for i in reader:
             data_list.append(i[1])
+        print('FINISHED loop')
         f.close()
+        print('closed file')
 
+        print('STARTED encoding')
         encoded_data = tokenizer(data_list, return_tensors='pt', padding=True)
 
+        print('Done encoding')
         input_id = encoded_data['input_ids']
         input_mask = encoded_data['attention_mask']
         
