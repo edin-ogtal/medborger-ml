@@ -20,6 +20,7 @@ def model_fn(model_dir):
     return model.to(device)
 
 def input_fn(serialized_input_data, request_content_type):
+    print('STARTED input_fn')
     """An input_fn that loads a pickled tensor"""
     if request_content_type == "application/json":
 
@@ -66,6 +67,7 @@ def input_fn(serialized_input_data, request_content_type):
 
 
 def output_fn(prediction_output, accept=JSON_CONTENT_TYPE):
+    print('STARTED output_fn')
     #logger.info('Serializing the generated output.')
     if accept == JSON_CONTENT_TYPE:
         return json.dumps(prediction_output), accept
@@ -74,6 +76,7 @@ def output_fn(prediction_output, accept=JSON_CONTENT_TYPE):
 
 
 def predict_fn(input_data, model):
+    print('STARTED predict_fn')
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     model.eval()
