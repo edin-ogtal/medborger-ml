@@ -45,7 +45,7 @@ def input_fn(serialized_input_data, request_content_type):
         return input_id, input_mask
     elif request_content_type == 'text/csv':
         # Read the raw input data as CSV.
-        df = pd.read_csv(StringIO(input_data), 
+        df = pd.read_csv(StringIO(serialized_input_data), 
                          header=None, sep='\t')
 
         encoded_data = tokenizer(df[1].to_list(), return_tensors='pt', padding=True)
