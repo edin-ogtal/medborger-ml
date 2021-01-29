@@ -2,6 +2,8 @@ import os
 import json
 import torch
 
+import pandas as pd
+
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 tokenizer = AutoTokenizer.from_pretrained("Maltehb/-l-ctra-danish-electra-small-uncased", use_fast=True)
@@ -40,6 +42,17 @@ def input_fn(serialized_input_data, request_content_type):
         print(input_id, '\n', input_mask)
 
         return input_id, input_mask
+    elif request_content_type == 'text/csv':
+        # Read the raw input data as CSV.
+        df = pd.read_csv(StringIO(input_data), 
+                         header=None, sep='\t')
+
+        encoded_data = tokenizer(df[1].to_list(), return_tensors='pt', padding=True)
+
+        input_id = encoded_data['input_ids']
+        input_mask = encoded_data['attention_mask']
+        
+        return input_id, input_mask
     raise ValueError("Unsupported content type: {}".format(request_content_type))
 
 
@@ -64,8 +77,8 @@ def predict_fn(input_data, model):
     with torch.no_grad():
         y = model(input_id, attention_mask=input_mask)[0]
         print("=============== inference result =================")
-        print(y)
+        #print(y)
         probs = y.softmax(1).tolist()
-        print(probs)
+        #print(probs)
     return probs
 
