@@ -6,6 +6,7 @@ import numpy as np
 import torch
 from transformers import AutoTokenizer,AutoModelForSequenceClassification
 from transformers import TrainingArguments, Trainer
+from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score
 
 from datasets import load_dataset, load_metric
 
@@ -74,7 +75,22 @@ def train(args):
 
     trainer.train()
 
-    print(trainer.predict(encoded_dataset['test']).metrics)
+    p = trainer.predict(encoded_dataset['test'])
+
+
+    predicted_classes = np.argmax(p.predictions, axis=1)
+    target_classes = p.label_ids
+    
+    print("confusion matrix: ", confusion_matrix(target_classes, predicted_classes))
+
+    print('F1 score: ', f1_score(target_classes, predicted_classes))
+
+    print('Precision score: ', precision_score(target_classes, predicted_classes))
+    print('Recall score: ', recall_score(target_classes, predicted_classes))
+
+    #print(trainer.predict(encoded_dataset['test']).metrics)
+
+    print(p.metrics)
 
     print('started saving')
 
@@ -101,7 +117,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--test-batch-size", type=int, default=8, metavar="N", help="input batch size for testing (default: 8)"
     )
-    parser.add_argument("--epochs", type=int, default=10, metavar="N", help="number of epochs to train (default: 2)")
+    parser.add_argument("--epochs", type=int, default=2, metavar="N", help="number of epochs to train (default: 2)")
     parser.add_argument("--lr", type=float, default=2e-5, metavar="LR", help="learning rate (default: 0.3e-5)")
     parser.add_argument("--weight_decay", type=float, default=0.01, metavar="M", help="weight_decay (default: 0.01)")
     parser.add_argument("--seed", type=int, default=43, metavar="S", help="random seed (default: 43)")
@@ -119,8 +135,8 @@ if __name__ == "__main__":
     # Container environment
     #parser.add_argument("--hosts", type=list, default=json.loads(os.environ["SM_HOSTS"]))
     #parser.add_argument("--current-host", type=str, default=os.environ["SM_CURRENT_HOST"])
-    parser.add_argument("--model-dir", type=str, default=os.environ["SM_MODEL_DIR"])
-    parser.add_argument("--data-dir", type=str, default=os.environ["SM_CHANNEL_DATA"])
+    #parser.add_argument("--model-dir", type=str, default=os.environ["SM_MODEL_DIR"])
+    #parser.add_argument("--data-dir", type=str, default=os.environ["SM_CHANNEL_DATA"])
     #parser.add_argument("--data-dir", type=str, default='.')
 
     #parser.add_argument("--test", type=str, default=os.environ["SM_CHANNEL_TESTING"])
