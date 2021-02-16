@@ -87,7 +87,7 @@ def train(args):
 
     print('Precision score: ', precision_score(target_classes, predicted_classes))
     print('Recall score: ', recall_score(target_classes, predicted_classes))
-    print('Loss: ' p.metrics['eval_loss'])
+    print('Loss: ', p.metrics['eval_loss'])
 
     #print(trainer.predict(encoded_dataset['test']).metrics)
 
