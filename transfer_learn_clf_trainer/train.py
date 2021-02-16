@@ -50,11 +50,11 @@ def train(args):
     train_args = TrainingArguments(
         "test-glue",
         evaluation_strategy = "epoch",
-        learning_rate=1e-4,
+        learning_rate=args.lr,
         per_device_train_batch_size=args.batch_size,
         per_device_eval_batch_size=args.test_batch_size,
         num_train_epochs=1,
-        weight_decay=0.01,
+        weight_decay=args.weight_decay,
         load_best_model_at_end=True,
         metric_for_best_model=metric_name,
     )
@@ -75,7 +75,7 @@ def train(args):
 
     trainer.train()
 
-    p = trainer.predict(encoded_dataset['test'])
+    p = trainer.predict(encoded_dataset['validation'])
 
 
     predicted_classes = np.argmax(p.predictions, axis=1)
@@ -87,6 +87,7 @@ def train(args):
 
     print('Precision score: ', precision_score(target_classes, predicted_classes))
     print('Recall score: ', recall_score(target_classes, predicted_classes))
+    print('Loss: ' p.metrics['eval_loss'])
 
     #print(trainer.predict(encoded_dataset['test']).metrics)
 
