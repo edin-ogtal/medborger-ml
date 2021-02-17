@@ -59,29 +59,20 @@ def _get_eval_data_loader(batch_size, data_dir):
 #    modlu
 
 
-def train(args):
-    use_cuda = args.num_gpus > 0
-    device = torch.device("cuda" if use_cuda else "cpu")
+# def train(args):
+#     use_cuda = args.num_gpus > 0
+#     device = torch.device("cuda" if use_cuda else "cpu")
 
-    torch.manual_seed(args.seed)
-    if use_cuda:
-        torch.cuda.manual_seed(args.seed)
+#     torch.manual_seed(args.seed)
+#     if use_cuda:
+#         torch.cuda.manual_seed(args.seed)
 
 
-    train_loader = _get_train_data_loader(args.batch_size, args.data_dir)
+#     train_loader = _get_train_data_loader(args.batch_size, args.data_dir)
 
 def get_model(model_checkpoint, num_labels):
     model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels=num_labels)
     return(model)
-
-def get_encoded_data(data_loader_script, tokenizer):
-    dataset = load_dataset(data_loader_script)
-
-    def preprocess_function(examples):
-        return tokenizer(examples['text'], truncation=True, max_length=MAX_LEN) 
-    encoded_dataset = dataset.map(preprocess_function, batched=True)
-
-    return(encoded_dataset)
 
 
 def train(args):
@@ -90,6 +81,12 @@ def train(args):
     
     train_loader = _get_train_data_loader(args.batch_size, args.data_dir)
     model = get_model(args.model_checkpoint, args.num_labels)
+
+    if args.num_gpus > 1:
+        model = torch.nn.DataParallel(model)
+ 
+ 
+
 
     #encoded_dataset = get_encoded_data('create_dataset.py', tokenizer)
     
