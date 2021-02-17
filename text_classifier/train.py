@@ -111,7 +111,10 @@ def train(args):
             if args.verbose:
                 print('Batch', step)
 
-    model.save_pretrained(args.model_dir)
+    if args.num_gpus > 1:
+        model.module.save_pretrained(args.model_dir)
+    else:
+        model.save_pretrained(args.model_dir)
 
     eval_loader = _get_eval_data_loader(args.test_batch_size, args.data_dir)        
     test(model, eval_loader, device)
