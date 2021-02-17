@@ -109,7 +109,8 @@ def train(args):
             optimizer.zero_grad()
 
             if args.verbose:
-                print('Batch', step)
+                if step % 100 == 0:
+                    print('Batch', step)
 
     if args.num_gpus > 1:
         model.module.save_pretrained(args.model_dir)
