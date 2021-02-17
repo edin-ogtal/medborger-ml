@@ -124,8 +124,8 @@ def train(args):
 
 def test(model, eval_loader, device):
     model.eval()
-    predicted_classes = torch.empty(0)
-    labels = torch.empty(0)
+    predicted_classes = torch.empty(0).to(device)
+    labels = torch.empty(0).to(device)
 
     with torch.no_grad():
         for step, batch in enumerate(eval_loader):
@@ -136,7 +136,8 @@ def test(model, eval_loader, device):
 
             outputs = model(b_input_ids,attention_mask=b_input_mask)
             _, preds = torch.max(outputs.logits, dim=1)
-            
+
+
             predicted_classes = torch.cat((predicted_classes, preds))
             labels = torch.cat((labels, b_labels))
 
