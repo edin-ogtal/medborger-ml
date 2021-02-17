@@ -39,7 +39,7 @@ def _get_train_data_loader(batch_size, data_dir):
 
     #Maybe use different sampler???
     train_sampler = RandomSampler(train_data)
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, sampler=train_sampler)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, sampler=train_sampler, num_workers = args.num_cpus, pin_memory=True)
     return(train_dataloader)
 
 
@@ -52,23 +52,9 @@ def _get_eval_data_loader(batch_size, data_dir):
                     max_len=MAX_LEN
                     )
     train_sampler = RandomSampler(train_data)
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, sampler=train_sampler)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, sampler=train_sampler, num_workers = args.num_cpus, pin_memory=True)
     return(train_dataloader)
 
-#def freeze(model, frozen_layers):
-#    modlu
-
-
-# def train(args):
-#     use_cuda = args.num_gpus > 0
-#     device = torch.device("cuda" if use_cuda else "cpu")
-
-#     torch.manual_seed(args.seed)
-#     if use_cuda:
-#         torch.cuda.manual_seed(args.seed)
-
-
-#     train_loader = _get_train_data_loader(args.batch_size, args.data_dir)
 
 def get_model(model_checkpoint, num_labels):
     model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels=num_labels)
@@ -79,17 +65,19 @@ def train(args):
     use_cuda = args.num_gpus > 0
     device = torch.device("cuda" if use_cuda else "cpu")
     
+    print(device)
+
     train_loader = _get_train_data_loader(args.batch_size, args.data_dir)
     model = get_model(args.model_checkpoint, args.num_labels)
 
+    torch.manual_seed(args.seed)
+    if use_cuda:
+        torch.cuda.manual_seed(args.seed)
+
     if args.num_gpus > 1:
         model = torch.nn.DataParallel(model)
- 
- 
-
-
-    #encoded_dataset = get_encoded_data('create_dataset.py', tokenizer)
-    
+        print('data parallel model')
+     
     # Maybe use different optimizer????
     optimizer = optim.Lamb(
             model.parameters(), 
@@ -194,8 +182,10 @@ if __name__ == "__main__":
     #parser.add_argument("--data-dir", type=str, default='.')
 
     #parser.add_argument("--test", type=str, default=os.environ["SM_CHANNEL_TESTING"])
-    #parser.add_argument("--num-gpus", type=int, default=os.environ["SM_NUM_GPUS"])
-    parser.add_argument("--num-gpus", type=int, default=False)
+    parser.add_argument("--num-gpus", type=int, default=os.environ["SM_NUM_GPUS"])
+    parser.add_argument("--num-cpus", type=int, default=os.environ["SM_NUM_CPUS"])
+    
+    #parser.add_argument("--num-gpus", type=int, default=False)
 
 
     args = parser.parse_args()
