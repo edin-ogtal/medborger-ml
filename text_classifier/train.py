@@ -77,6 +77,7 @@ def train(args):
     if args.num_gpus > 1:
         model = torch.nn.DataParallel(model)
         print('data parallel model')
+        model.cuda()
      
     # Maybe use different optimizer????
     optimizer = optim.Lamb(
