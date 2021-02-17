@@ -141,6 +141,9 @@ def test(model, eval_loader, device):
             predicted_classes = torch.cat((predicted_classes, preds))
             labels = torch.cat((labels, b_labels))
 
+    predicted_classes = predicted_classes.to('cpu')
+    labels = labels.to('cpu')
+
     print("confusion matrix:")
     print(confusion_matrix(labels, predicted_classes))
     print('F1 score:', f1_score(labels, predicted_classes))
