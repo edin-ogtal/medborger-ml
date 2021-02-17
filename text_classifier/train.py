@@ -63,7 +63,7 @@ def get_model(model_checkpoint, num_labels):
 
 def train(args):
     use_cuda = args.num_gpus > 0
-    device = torch.device("cuda" if use_cuda else "cpu")
+    device = torch.device("cuda:0" if use_cuda else "cpu")
     
     print(device)
 
