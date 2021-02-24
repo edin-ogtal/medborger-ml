@@ -135,3 +135,12 @@ lstm-lm/*
 
 imdb_transformers/*
 *checkpoint-*
+
+*.csv
+data/
+*.bin
+*.json
+*.txt
+*.pth
+*.code-workspace
+*.tar.gz
