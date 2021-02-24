@@ -11,7 +11,7 @@ import torch_optimizer as optim
 
 from transformers import AutoTokenizer,AutoModelForSequenceClassification
 from transformers import TrainingArguments, Trainer
-from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score
+from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, accuracy_score
 
 from datasets import load_dataset, load_metric
 
@@ -19,6 +19,8 @@ from torch.utils.data import RandomSampler, DataLoader
 
 # Network definition
 from data_prep import MedborgerDataset
+
+from model_def import ToyModel, TextClassifier
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -39,7 +41,13 @@ def _get_train_data_loader(batch_size, data_dir):
 
     #Maybe use different sampler???
     train_sampler = RandomSampler(train_data)
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, sampler=train_sampler, num_workers = args.num_cpus, pin_memory=True)
+
+    if args.num_gpus > 0:
+        pin_memory = True
+    else:
+        pin_memory = False
+
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, sampler=train_sampler, num_workers = args.num_cpus, pin_memory=pin_memory)
     return(train_dataloader)
 
 
@@ -52,7 +60,13 @@ def _get_eval_data_loader(batch_size, data_dir):
                     max_len=MAX_LEN
                     )
     train_sampler = RandomSampler(train_data)
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, sampler=train_sampler, num_workers = args.num_cpus, pin_memory=True)
+
+    if args.num_gpus > 0:
+        pin_memory = True
+    else:
+        pin_memory = False
+
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, sampler=train_sampler, num_workers = args.num_cpus, pin_memory=pin_memory)
     return(train_dataloader)
 
 
@@ -68,7 +82,11 @@ def train(args):
     print(device)
 
     train_loader = _get_train_data_loader(args.batch_size, args.data_dir)
-    model = get_model(args.model_checkpoint, args.num_labels)
+    #model = get_model(args.model_checkpoint, args.num_labels)
+
+    #model = ToyModel()
+
+    model = TextClassifier(2)
 
     torch.manual_seed(args.seed)
     if use_cuda:
@@ -96,12 +114,16 @@ def train(args):
 
         for step, batch in enumerate(train_loader):
             b_input_ids = batch['input_ids'].to(device)
+            #b_input_ids = batch['input_ids'].type(torch.FloatTensor).to(device)
             b_input_mask = batch['attention_mask'].to(device)
             b_labels = batch['targets'].to(device)
 
             outputs = model(b_input_ids,attention_mask=b_input_mask)
+            #outputs = model(b_input_ids)
 
-            loss = loss_fn(outputs.logits, b_labels)
+            #loss = loss_fn(outputs.logits, b_labels)
+            loss = loss_fn(outputs[:, -1], b_labels)
+            #loss = loss_fn(outputs, b_labels)
 
             loss.backward()
             #torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0) ?????
@@ -109,13 +131,14 @@ def train(args):
             optimizer.zero_grad()
 
             if args.verbose:
+                print('Batch', step)
                 if step % 100 == 0:
                     print('Batch', step)
 
-    if args.num_gpus > 1:
-        model.module.save_pretrained(args.model_dir)
-    else:
-        model.save_pretrained(args.model_dir)
+    #if args.num_gpus > 1:
+    #    model.module.save_pretrained(args.model_dir)
+    #else:
+    #    model.save_pretrained(args.model_dir)
 
     eval_loader = _get_eval_data_loader(args.test_batch_size, args.data_dir)        
     test(model, eval_loader, device)
@@ -131,11 +154,15 @@ def test(model, eval_loader, device):
         for step, batch in enumerate(eval_loader):
             print(step)
             b_input_ids = batch['input_ids'].to(device)
+            #b_input_ids = batch['input_ids'].type(torch.FloatTensor).to(device)
             b_input_mask = batch['attention_mask'].to(device)
             b_labels = batch['targets'].to(device)
 
             outputs = model(b_input_ids,attention_mask=b_input_mask)
-            _, preds = torch.max(outputs.logits, dim=1)
+            #outputs = model(b_input_ids)
+            #_, preds = torch.max(outputs.logits, dim=1)
+            _, preds = torch.max(outputs[:, -1], dim=1)
+            #_, preds = torch.max(outputs, dim=1)
 
 
             predicted_classes = torch.cat((predicted_classes, preds))
@@ -149,6 +176,7 @@ def test(model, eval_loader, device):
     print('F1 score:', f1_score(labels, predicted_classes))
     print('Precision score:', precision_score(labels, predicted_classes))
     print('Recall score:', recall_score(labels, predicted_classes))
+    print('Accuracy:', accuracy_score(labels, predicted_classes))
 
 
 if __name__ == "__main__":
@@ -166,9 +194,9 @@ if __name__ == "__main__":
         "--batch-size", type=int, default=16, metavar="N", help="input batch size for training (default: 16)"
     )
     parser.add_argument(
-        "--test-batch-size", type=int, default=8, metavar="N", help="input batch size for testing (default: 8)"
+        "--test-batch-size", type=int, default=16, metavar="N", help="input batch size for testing (default: 8)"
     )
-    parser.add_argument("--epochs", type=int, default=2, metavar="N", help="number of epochs to train (default: 2)")
+    parser.add_argument("--epochs", type=int, default=20, metavar="N", help="number of epochs to train (default: 2)")
     parser.add_argument("--lr", type=float, default=2e-5, metavar="LR", help="learning rate (default: 0.3e-5)")
     parser.add_argument("--weight_decay", type=float, default=0.01, metavar="M", help="weight_decay (default: 0.01)")
     parser.add_argument("--seed", type=int, default=43, metavar="S", help="random seed (default: 43)")
