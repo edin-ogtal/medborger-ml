@@ -25,6 +25,6 @@ class MedborgerDataset(Dataset):
           'text': text,
           'input_ids': encoding['input_ids'].flatten(),
           'attention_mask': encoding['attention_mask'].flatten(),
-          'targets': torch.tensor(target, dtype=torch.long)
+          'targets': torch.tensor(target)
         }
 
