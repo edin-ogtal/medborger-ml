@@ -140,7 +140,7 @@ imdb_transformers/*
 data/
 *.bin
 *.json
-*.txt
+[0-9]*.txt
 *.pth
 *.code-workspace
 *.tar.gz
