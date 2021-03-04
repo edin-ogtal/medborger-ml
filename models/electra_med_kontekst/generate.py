@@ -34,20 +34,27 @@ def input_fn(serialized_input_data, request_content_type):
         data = json.loads(serialized_input_data)
         print("================ input sentences ===============")
         print(data)
+
+        
                 
-        encoded_data = tokenizer(data['text'], return_tensors='pt')
+        tokenized_text = tokenizer(data['text'], return_tensors='pt', padding=True, truncation=True, max_length=MAX_LEN)
+        tokenized_context = tokenizer(data['context'], return_tensors='pt', padding=True, truncation=True, max_length=MAX_LEN)
         
-        input_id = encoded_data['input_ids']
-        input_mask = encoded_data['attention_mask']
+        input_ids_text = tokenized_text['input_ids'].squeeze()
+        attention_mask_text = tokenized_text['attention_mask'].squeeze()
 
-        print("================ encoded sentences ==============")
-        
-        print(input_id)
-        
-        print("================= padded input and attention mask ================")
-        print(input_id, '\n', input_mask)
+        input_ids_context = tokenized_context['input_ids'].squeeze()
+        attention_mask_context = tokenized_context['attention_mask'].squeeze()
 
-        return input_id, input_mask
+        print("================ tokenized text ==============")
+        
+        print(tokenized_text)
+        
+        print("================= tokenized context ================")
+        print(tokenized_context)
+
+        return input_ids_text, attention_mask_text, input_ids_context, attention_mask_context
+
     elif request_content_type == 'text/csv':
         # Read the raw input data as CSV.
         print('STARTED creating data_list')
@@ -83,13 +90,15 @@ def predict_fn(input_data, model):
     model.to(device)
     model.eval()
 
-    input_id, input_mask = input_data
-    input_id = input_id.to(device)
-    input_mask = input_mask.to(device)
+    input_ids_text, attention_mask_text, input_ids_context, attention_mask_context = input_data
+    input_ids_text = input_ids_text.to(device)
+    attention_mask_text = attention_mask_text.to(device)
+    input_ids_context = input_ids_context.to(device)
+    attention_mask_context = attention_mask_context.to(device)
     print("============== encoded data =================")
     print(input_id, input_mask)
     with torch.no_grad():
-        y = model(input_id, attention_mask=input_mask)[0]
+        y = model(input_ids_text, attention_mask_text=attention_mask_text, input_ids_context=input_ids_context, attention_mask_context=attention_mask_context)
         print("=============== inference result =================")
         #print(y)
         probs = y.softmax(1).tolist()
