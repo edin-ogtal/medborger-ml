@@ -17,11 +17,12 @@ JSON_CONTENT_TYPE = 'application/json'
 
 def model_fn(model_dir):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(model_dir)
     print("================ objects in model_dir ===================")
     print(os.listdir(model_dir))
     model = ElectraClassifier(PRE_TRAINED_MODEL_NAME, 12)
 
-    model.load_state_dict(torch.load(model_dir + 'pytorch_model.bin'))
+    model.load_state_dict(torch.load(model_dir + '/pytorch_model.bin'))
     
     print("================ model loaded ===========================")
     return model.to(device)
