@@ -5,7 +5,7 @@ import csv
 
 from io import StringIO
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
-
+from model_def import ElectraClassifier
 
 MAX_LEN = 512  # this is the max length of the sequence
 PRE_TRAINED_MODEL_NAME = "Maltehb/-l-ctra-danish-electra-small-uncased"
@@ -19,7 +19,10 @@ def model_fn(model_dir):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("================ objects in model_dir ===================")
     print(os.listdir(model_dir))
-    model = AutoModelForSequenceClassification.from_pretrained(model_dir)
+    model = ElectraClassifier(PRE_TRAINED_MODEL_NAME, 12)
+
+    model.load_state_dict(torch.load(model_dir + 'pytorch_model.bin'))
+    
     print("================ model loaded ===========================")
     return model.to(device)
 
