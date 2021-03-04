@@ -22,7 +22,7 @@ def model_fn(model_dir):
     print(os.listdir(model_dir))
     model = ElectraClassifier(PRE_TRAINED_MODEL_NAME, 12)
 
-    model.load_state_dict(torch.load(model_dir + '/pytorch_model.bin'))
+    model.load_state_dict(torch.load(model_dir + '/pytorch_model.bin', map_location=torch.device('cpu')))
     
     print("================ model loaded ===========================")
     return model.to(device)
