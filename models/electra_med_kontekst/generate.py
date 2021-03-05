@@ -77,8 +77,8 @@ def input_fn(serialized_input_data, request_content_type):
 
         print('STARTED encoding')
 
-        tokenized_text = tokenizer(text, return_tensors='pt', padding=True, truncation=False, max_length=MAX_LEN)
-        tokenized_context = tokenizer(context, return_tensors='pt', padding=True, truncation=False, max_length=MAX_LEN)
+        tokenized_text = tokenizer(text, return_tensors='pt', padding=True, truncation=True, max_length=MAX_LEN)
+        tokenized_context = tokenizer(context, return_tensors='pt', padding=True, truncation=True, max_length=MAX_LEN)
         
         input_ids_text = tokenized_text['input_ids']
         attention_mask_text = tokenized_text['attention_mask']
