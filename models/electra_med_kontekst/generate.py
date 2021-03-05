@@ -38,14 +38,14 @@ def input_fn(serialized_input_data, request_content_type):
 
         
                 
-        tokenized_text = tokenizer(data['text'], return_tensors='pt', padding=True, truncation=True, max_length=MAX_LEN)
-        tokenized_context = tokenizer(data['context'], return_tensors='pt', padding=True, truncation=True, max_length=MAX_LEN)
+        tokenized_text = tokenizer(data['text'], return_tensors='pt', padding=True, truncation=False, max_length=MAX_LEN)
+        tokenized_context = tokenizer(data['context'], return_tensors='pt', padding=True, truncation=False, max_length=MAX_LEN)
         
-        input_ids_text = tokenized_text['input_ids'].squeeze()
-        attention_mask_text = tokenized_text['attention_mask'].squeeze()
+        input_ids_text = tokenized_text['input_ids']
+        attention_mask_text = tokenized_text['attention_mask']
 
-        input_ids_context = tokenized_context['input_ids'].squeeze()
-        attention_mask_context = tokenized_context['attention_mask'].squeeze()
+        input_ids_context = tokenized_context['input_ids']
+        attention_mask_context = tokenized_context['attention_mask']
 
         print("================ tokenized text ==============")
         
