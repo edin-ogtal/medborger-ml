@@ -66,13 +66,20 @@ def input_fn(serialized_input_data, request_content_type):
         print(serialized_input_data)
         print(type(serialized_input_data))
         print(serialized_input_data.split('\t'))
-        id_val, text, group, main_text, secondary_text = serialized_input_data.split('\t')
+        
+        data_list = serialized_input_data.split('\t')
+        id_val = data_list[0]
+        text = data_list[1]
+        context = ''
+        for i in data_list[2:]
+            j = i + '\n'
+            context += j
 
         context = group +' [SEP] ' + main_text + ' [SEP] ' + str(secondary_text)
         print('STARTED encoding')
 
         tokenized_text = tokenizer(text, return_tensors='pt', padding=True, truncation=False, max_length=MAX_LEN)
-        tokenized_context = tokenizer(cnotext, return_tensors='pt', padding=True, truncation=False, max_length=MAX_LEN)
+        tokenized_context = tokenizer(context, return_tensors='pt', padding=True, truncation=False, max_length=MAX_LEN)
         
         input_ids_text = tokenized_text['input_ids']
         attention_mask_text = tokenized_text['attention_mask']
