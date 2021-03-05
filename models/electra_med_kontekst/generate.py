@@ -93,7 +93,7 @@ def input_fn(serialized_input_data, request_content_type):
         #print("================= tokenized context ================")
         #print(tokenized_context)
         
-        return input_ids_text, attention_mask_text, input_ids_context, attention_mask_context
+        return id_val, input_ids_text, attention_mask_text, input_ids_context, attention_mask_context
     raise ValueError("Unsupported content type: {}".format(request_content_type))
 
 
@@ -112,7 +112,7 @@ def predict_fn(input_data, model):
     model.to(device)
     model.eval()
 
-    input_ids_text, attention_mask_text, input_ids_context, attention_mask_context = input_data
+    id_val, input_ids_text, attention_mask_text, input_ids_context, attention_mask_context = input_data
     input_ids_text = input_ids_text.to(device)
     attention_mask_text = attention_mask_text.to(device)
     input_ids_context = input_ids_context.to(device)
@@ -125,5 +125,5 @@ def predict_fn(input_data, model):
         #print(y)
         probs = y.softmax(1).tolist()
         #print(probs)
-    return probs
+    return id_val, probs
 
