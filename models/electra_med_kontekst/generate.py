@@ -66,7 +66,7 @@ def input_fn(serialized_input_data, request_content_type):
         print(serialized_input_data)
         print(type(serialized_input_data))
         print(serialized_input_data.split('\t'))
-        id, text, group, main_text, secondary_text = serialized_input_data.split('\')
+        id, text, group, main_text, secondary_text = serialized_input_data.split('\t')
         print('STARTED encoding')
         encoded_data = tokenizer(serialized_input_data, return_tensors='pt', padding=True, truncation=True, max_length=MAX_LEN)
 
