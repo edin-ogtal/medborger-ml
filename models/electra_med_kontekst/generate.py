@@ -66,15 +66,28 @@ def input_fn(serialized_input_data, request_content_type):
         print(serialized_input_data)
         print(type(serialized_input_data))
         print(serialized_input_data.split('\t'))
-        id, text, group, main_text, secondary_text = serialized_input_data.split('\t')
-        print('STARTED encoding')
-        encoded_data = tokenizer(serialized_input_data, return_tensors='pt', padding=True, truncation=True, max_length=MAX_LEN)
+        id_val, text, group, main_text, secondary_text = serialized_input_data.split('\t')
 
-        print('Done encoding')
-        input_id = encoded_data['input_ids']
-        input_mask = encoded_data['attention_mask']
+        context = group +' [SEP] ' + main_text + ' [SEP] ' + str(secondary_text)
+        print('STARTED encoding')
+
+        tokenized_text = tokenizer(text, return_tensors='pt', padding=True, truncation=False, max_length=MAX_LEN)
+        tokenized_context = tokenizer(cnotext, return_tensors='pt', padding=True, truncation=False, max_length=MAX_LEN)
         
-        return input_id, input_mask
+        input_ids_text = tokenized_text['input_ids']
+        attention_mask_text = tokenized_text['attention_mask']
+
+        input_ids_context = tokenized_context['input_ids']
+        attention_mask_context = tokenized_context['attention_mask']
+
+        print("================ tokenized text ==============")
+        
+        print(tokenized_text)
+        
+        print("================= tokenized context ================")
+        print(tokenized_context)
+        
+        return input_ids_text, attention_mask_text, input_ids_context, attention_mask_context
     raise ValueError("Unsupported content type: {}".format(request_content_type))
 
 
