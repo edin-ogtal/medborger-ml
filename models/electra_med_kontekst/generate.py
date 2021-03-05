@@ -5,7 +5,7 @@ import csv
 
 from io import StringIO
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
-from model_def import ElectraClassifier, DualElectra
+from model_def import ElectraClassifier, DualElectra, ElectraWithContextClassifier
 
 MAX_LEN = 512  # this is the max length of the sequence
 PRE_TRAINED_MODEL_NAME = "Maltehb/-l-ctra-danish-electra-small-uncased"
@@ -20,7 +20,7 @@ def model_fn(model_dir):
     print(model_dir)
     print("================ objects in model_dir ===================")
     print(os.listdir(model_dir))
-    model = DualElectra(PRE_TRAINED_MODEL_NAME, 12)
+    model = ElectraWithContextClassifier(PRE_TRAINED_MODEL_NAME, 2)
 
     model.load_state_dict(torch.load(model_dir + '/pytorch_model.bin', map_location=torch.device('cpu')))
     
@@ -65,6 +65,8 @@ def input_fn(serialized_input_data, request_content_type):
         print('STARTED openinig data')
         print(serialized_input_data)
         print(type(serialized_input_data))
+        print(serialized_input_data.split('\'))
+        id, text, group, main_text, secondary_text = serialized_input_data.split('\')
         print('STARTED encoding')
         encoded_data = tokenizer(serialized_input_data, return_tensors='pt', padding=True, truncation=True, max_length=MAX_LEN)
 
