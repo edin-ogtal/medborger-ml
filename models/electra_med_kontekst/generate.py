@@ -97,7 +97,7 @@ def predict_fn(input_data, model):
     input_ids_context = input_ids_context.to(device)
     attention_mask_context = attention_mask_context.to(device)
     print("============== encoded data =================")
-    print(input_id, input_mask)
+    print(input_ids_text, attention_mask_text, input_ids_context, attention_mask_context)
     with torch.no_grad():
         y = model(input_ids_text, attention_mask_text=attention_mask_text, input_ids_context=input_ids_context, attention_mask_context=attention_mask_context)
         print("=============== inference result =================")
