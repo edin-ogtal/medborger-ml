@@ -71,7 +71,7 @@ def input_fn(serialized_input_data, request_content_type):
         id_val = data_list[0]
         text = data_list[1]
         context = ''
-        for i in data_list[2:]
+        for i in data_list[2:]:
             j = i + '\n'
             context += j
 
