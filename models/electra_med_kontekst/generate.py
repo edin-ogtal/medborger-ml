@@ -75,7 +75,6 @@ def input_fn(serialized_input_data, request_content_type):
             j = i + '\n'
             context += j
 
-        context = group +' [SEP] ' + main_text + ' [SEP] ' + str(secondary_text)
         print('STARTED encoding')
 
         tokenized_text = tokenizer(text, return_tensors='pt', padding=True, truncation=False, max_length=MAX_LEN)
