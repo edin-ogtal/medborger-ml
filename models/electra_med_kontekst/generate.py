@@ -67,14 +67,20 @@ def input_fn(serialized_input_data, request_content_type):
         #print(type(serialized_input_data))
         #print(serialized_input_data.split('\t'))
         
-        data_list = serialized_input_data.split('\t')
-        id_val = data_list[0]
-        text = data_list[1]
-        context = ''
-        for i in data_list[2:]:
-            j = i + '\n'
-            context += j
-
+        try:
+            data_list = serialized_input_data.split('\t')
+            id_val = data_list[0]
+            text = data_list[1]
+            context = ''
+            for i in data_list[2:]:
+                j = i + '\n'
+                context += j
+        except: 
+            print('Error')
+            print(serialized_input_data)
+            id_val = 'error'
+            text = 'error error'
+            context = 'error error'
         #print('STARTED encoding')
 
         tokenized_text = tokenizer(text, return_tensors='pt', padding='max_length', truncation=True, max_length=MAX_LEN)
