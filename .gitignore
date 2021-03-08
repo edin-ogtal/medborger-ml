@@ -138,7 +138,6 @@ imdb_transformers/*
 
 *.csv
 data/
-*.bin
 *.json
 [0-9]*.txt
 *.pth
