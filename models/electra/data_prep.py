@@ -1,5 +1,7 @@
 import torch
-from torch.utils.data import Dataset
+import numpy as np
+import pandas as pd
+from torch.utils.data import Dataset,RandomSampler,DataLoader
 
 class MedborgerDataset(Dataset):
     def __init__(self, text, targets, tokenizer, max_len):
@@ -28,3 +30,24 @@ class MedborgerDataset(Dataset):
           'targets': torch.tensor(target)
         }
 
+
+def get_data_loader(path,tokenizer,max_len,batch_size,num_workers):
+    dataset = pd.read_csv(path, sep='\t', names = ['targets', 'target_names', 'text', 'origin', 'main_text', 'secondary_text', 'source'])
+    dataset = remove_invalid_inputs(dataset,'text')
+
+    data = MedborgerDataset(
+                    text=dataset.text.to_numpy(),
+                    targets=dataset.targets.to_numpy(),
+                    tokenizer=tokenizer,
+                    max_len=max_len
+                    )
+
+    sampler = RandomSampler(data)
+    dataloader = DataLoader(data,batch_size=batch_size,sampler=sampler,num_workers=num_workers,pin_memory=True)
+    return dataloader,data
+
+
+def remove_invalid_inputs(dataset,text_column):
+    'Simpel metode til at fjerne alle rækker fra en dataframe, baseret på om værdierne i en kolonne er af typen str'
+    dataset['valid'] = dataset[text_column].apply(lambda x: isinstance(x, str))
+    return dataset.loc[dataset.valid]

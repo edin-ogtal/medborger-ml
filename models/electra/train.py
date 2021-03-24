@@ -3,228 +3,157 @@ import logging
 import os
 import sys
 import torch
-
+from transformers import AutoTokenizer
+from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score
 import numpy as np
 import pandas as pd
-import torch.nn as nn
-import torch_optimizer as optim
 
-from transformers import AutoTokenizer,AutoModelForSequenceClassification
-from transformers import TrainingArguments, Trainer
-from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, accuracy_score
-
-from datasets import load_dataset, load_metric
-
-from torch.utils.data import RandomSampler, DataLoader
-
-# Network definition
-from data_prep import MedborgerDataset
-
-from model_def import ToyModel, TextClassifier
+from model_def import ElectraClassifier
+from utils import save_model
+from data_prep import get_data_loader
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
-MAX_LEN = 512
-PRETRAINED_MODEL_NAME = 'Maltehb/-l-ctra-danish-electra-small-uncased'
-tokenizer = AutoTokenizer.from_pretrained(PRETRAINED_MODEL_NAME, use_fast=True)
-
-def _get_train_data_loader(batch_size, data_dir):
-    dataset = pd.read_csv(os.path.join(args.data_dir, 'train.csv'), sep='\t', names = ['targets', 'text'])
-    train_data = MedborgerDataset(
-                    text=dataset.text.to_numpy(),
-                    targets=dataset.targets.to_numpy(),
-                    tokenizer=tokenizer,
-                    max_len=MAX_LEN
-                    )
-
-    #Maybe use different sampler???
-    train_sampler = RandomSampler(train_data)
-
-    if args.num_gpus > 0:
-        pin_memory = True
-    else:
-        pin_memory = False
-
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, sampler=train_sampler, num_workers = args.num_cpus, pin_memory=pin_memory)
-    return(train_dataloader)
-
-
-def _get_eval_data_loader(batch_size, data_dir):
-    dataset = pd.read_csv(os.path.join(args.data_dir, 'valid.csv'), sep='\t', names = ['targets', 'text'])
-    train_data = MedborgerDataset(
-                    text=dataset.text.to_numpy(),
-                    targets=dataset.targets.to_numpy(),
-                    tokenizer=tokenizer,
-                    max_len=MAX_LEN
-                    )
-    train_sampler = RandomSampler(train_data)
-
-    if args.num_gpus > 0:
-        pin_memory = True
-    else:
-        pin_memory = False
-
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, sampler=train_sampler, num_workers = args.num_cpus, pin_memory=pin_memory)
-    return(train_dataloader)
-
-
-def get_model(model_checkpoint, num_labels):
-    model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint, num_labels=num_labels)
-    return(model)
-
-
 def train(args):
-    use_cuda = args.num_gpus > 0
-    device = torch.device("cuda:0" if use_cuda else "cpu")
-    
-    print(device)
-
-    train_loader = _get_train_data_loader(args.batch_size, args.data_dir)
-    #model = get_model(args.model_checkpoint, args.num_labels)
-
-    #model = ToyModel()
-
-    model = TextClassifier(2)
 
     torch.manual_seed(args.seed)
-    if use_cuda:
-        torch.cuda.manual_seed(args.seed)
+    model = ElectraClassifier(args.model_checkpoint,args.num_labels)
 
-    if args.num_gpus > 1:
+    # Setting up cuda
+    if args.num_gpus > 0:
+        device = 'cuda:0'
+        if args.num_gpus*7 <= args.num_cpus:
+            num_workers = args.num_gpus*7
+        else:
+            num_workers = max(args.num_cpus,1)
+    else:
+        device = 'cpu'
+        num_workers = max(args.num_cpus,1)
+    
+    model = model.to(device)
+    if args.num_cpus > 1:
         model = torch.nn.DataParallel(model)
-        print('data parallel model')
-        model.cuda()
-     
-    # Maybe use different optimizer????
-    optimizer = optim.Lamb(
+
+    # tokenizer,dataloader and model
+    tokenizer = AutoTokenizer.from_pretrained(args.model_checkpoint, use_fast=True)
+    train_path = os.path.join(args.data_dir,args.train)
+    train_loader,train_data = get_data_loader(train_path,tokenizer,args.max_len,args.batch_size,num_workers)
+
+    # Setting the optimizer (Important that this is done after, and not before, moving the model to cuda)
+    optimizer = torch.optim.AdamW(
             model.parameters(), 
             lr = args.lr, 
-            betas=(0.9, 0.999), 
-            eps=args.epsilon, 
+            eps = args.epsilon,
             weight_decay=args.weight_decay)
 
-    # Maybe use different loss function
-    loss_fn = nn.CrossEntropyLoss().to(device)
+    # loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([1.,3.])).to(device)
+    loss_fn = torch.nn.CrossEntropyLoss().to(device)
 
+    # Train
+    model.train()
+    # print(torch.cuda.memory_reserved())
 
     for epoch in range(1, args.epochs + 1):
-        model.train()
-
+        running_loss = 0
+        correct = 0
+        print('Epoch', epoch)
         for step, batch in enumerate(train_loader):
-            b_input_ids = batch['input_ids'].to(device)
-            #b_input_ids = batch['input_ids'].type(torch.FloatTensor).to(device)
-            b_input_mask = batch['attention_mask'].to(device)
-            b_labels = batch['targets'].to(device)
-
-            outputs = model(b_input_ids,attention_mask=b_input_mask)
-            #outputs = model(b_input_ids)
-
-            #loss = loss_fn(outputs.logits, b_labels)
-            loss = loss_fn(outputs[:, -1], b_labels)
-            #loss = loss_fn(outputs, b_labels)
-
-            loss.backward()
-            #torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0) ?????
-            optimizer.step()
-            optimizer.zero_grad()
-
-            if args.verbose:
-                print('Batch', step)
-                if step % 100 == 0:
-                    print('Batch', step)
-
-    #if args.num_gpus > 1:
-    #    model.module.save_pretrained(args.model_dir)
-    #else:
-    #    model.save_pretrained(args.model_dir)
-
-    eval_loader = _get_eval_data_loader(args.test_batch_size, args.data_dir)        
-    test(model, eval_loader, device)
-
-
-
-def test(model, eval_loader, device):
-    model.eval()
-    predicted_classes = torch.empty(0).to(device)
-    labels = torch.empty(0).to(device)
-
-    with torch.no_grad():
-        for step, batch in enumerate(eval_loader):
             print(step)
             b_input_ids = batch['input_ids'].to(device)
-            #b_input_ids = batch['input_ids'].type(torch.FloatTensor).to(device)
             b_input_mask = batch['attention_mask'].to(device)
             b_labels = batch['targets'].to(device)
 
-            outputs = model(b_input_ids,attention_mask=b_input_mask)
-            #outputs = model(b_input_ids)
-            #_, preds = torch.max(outputs.logits, dim=1)
-            _, preds = torch.max(outputs[:, -1], dim=1)
-            #_, preds = torch.max(outputs, dim=1)
+            logits = model(b_input_ids, attention_mask=b_input_mask)
+            loss = loss_fn(logits.view(-1, args.num_labels), b_labels.view(-1))
+            optimizer.zero_grad()
+            loss.sum().backward()
+            optimizer.step()
 
+            running_loss += loss.item() * b_input_ids.size(0)
+            _, predicted = torch.max(logits, 1)
+            correct += (predicted == b_labels).sum().item()
 
-            predicted_classes = torch.cat((predicted_classes, preds))
-            labels = torch.cat((labels, b_labels))
+        running_loss = running_loss/train_data.__len__()
+        running_accuracy = 100*(correct/train_data.__len__())
+        print('Running loss', running_loss)
+        print('Running accuracy', running_accuracy)
 
-    predicted_classes = predicted_classes.to('cpu')
-    labels = labels.to('cpu')
+    ## save model
+    if args.save_model:
+        save_model(model, args.model_dir,args.num_gpus)
+
+    # Test on eval data
+    eval_path = os.path.join(args.data_dir,args.eval)
+    eval_loader,_ = get_data_loader(eval_path,tokenizer,args.max_len,args.test_batch_size,num_workers)
+    predictions,true_labels,texts = test(model, eval_loader,device)
+
+    # Export predictions to csv
+    obs = list()
+    for pred,true,text in zip(predictions,true_labels,texts):
+        d = {'predicted_label':pred,'true_label':true,'correct':true==pred,'text':text}
+        obs.append(d)
+    df = pd.DataFrame(obs)
+    data_path = os.path.join(args.data_dir,'predicted.csv')
+    df.to_csv(data_path,encoding='utf-8',sep='\t')
+
+def test(model, eval_loader,device):
+    model.eval()
+    predictions = torch.empty(0,device=device)
+    true_labels = torch.empty(0,device=device)
+    texts = []
+    with torch.no_grad():
+        for step, batch in enumerate(eval_loader):
+            texts += batch['text']
+            b_input_ids = batch['input_ids'].to(device)
+            b_input_mask = batch['attention_mask'].to(device)
+            b_labels = batch['targets'].to(device)
+
+            logits = model(b_input_ids,b_input_mask)
+            _,preds = torch.max(logits, dim=1)
+
+            predictions = torch.cat((predictions, preds))
+            true_labels = torch.cat((true_labels, b_labels))
+
+    predictions = predictions.detach().cpu().numpy()
+    true_labels = true_labels.detach().cpu().numpy()
+    texts = np.asarray(texts)
 
     print("confusion matrix:")
-    print(confusion_matrix(labels, predicted_classes))
-    print('F1 score:', f1_score(labels, predicted_classes))
-    print('Precision score:', precision_score(labels, predicted_classes))
-    print('Recall score:', recall_score(labels, predicted_classes))
-    print('Accuracy:', accuracy_score(labels, predicted_classes))
+    print(confusion_matrix(true_labels, predictions))
+    print('F1 score:', f1_score(true_labels, predictions))
+    print('Precision score:', precision_score(true_labels, predictions))
+    print('Recall score:', recall_score(true_labels, predictions))
+    return predictions,true_labels,texts
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Data and model checkpoints directories
-    parser.add_argument(
-        "--model_checkpoint", type=str, default='Maltehb/-l-ctra-danish-electra-small-uncased', help="name of pretrained model from huggingface model hub"
-    )
-    parser.add_argument(
-        "--num_labels", type=int, default=2, metavar="N", help="Number of labels."
-    )
-
-    parser.add_argument(
-        "--batch-size", type=int, default=16, metavar="N", help="input batch size for training (default: 16)"
-    )
-    parser.add_argument(
-        "--test-batch-size", type=int, default=16, metavar="N", help="input batch size for testing (default: 8)"
-    )
-    parser.add_argument("--epochs", type=int, default=20, metavar="N", help="number of epochs to train (default: 2)")
-    parser.add_argument("--lr", type=float, default=2e-5, metavar="LR", help="learning rate (default: 0.3e-5)")
-    parser.add_argument("--weight_decay", type=float, default=0.01, metavar="M", help="weight_decay (default: 0.01)")
-    parser.add_argument("--seed", type=int, default=43, metavar="S", help="random seed (default: 43)")
-    parser.add_argument("--epsilon", type=int, default=1e-8, metavar="EP", help="random seed (default: 1e-8)")
-    #parser.add_argument("--frozen_layers", type=int, default=10, metavar="NL", help="number of frozen layers(default: 10)")
-    parser.add_argument('--verbose', default=True,help='For displaying logs')
-    #parser.add_argument(
-    #    "--log-interval",
-    #    type=int,
-    #    default=10,
-    #    metavar="N",
-    #    help="how many batches to wait before logging training status",
-    #)
+    parser.add_argument("--model-checkpoint", type=str, default='Maltehb/-l-ctra-danish-electra-small-cased', help="name of pretrained model from huggingface model hub")
+    parser.add_argument("--num-labels", type=int, default=2)
+    parser.add_argument("--train", type=str, default='train.csv')
+    parser.add_argument("--eval", type=str, default='eval.csv')
+    parser.add_argument("--test", type=str, default='test.csv')
+    # Hyperparams
+    parser.add_argument("--max-len", type=int, default=512)
+    parser.add_argument("--batch-size", type=int, default=4)
+    parser.add_argument("--test-batch-size", type=int, default=4)
+    parser.add_argument("--epochs", type=int, default=2, help="number of epochs to train (default: 2)")
+    parser.add_argument("--lr", type=float, default=2e-5)
+    parser.add_argument("--weight-decay", type=float, default=0.01)
+    parser.add_argument("--seed", type=int, default=43)
+    parser.add_argument("--epsilon", type=float, default=1e-8)
 
     # Container environment
-    #parser.add_argument("--hosts", type=list, default=json.loads(os.environ["SM_HOSTS"]))
-    #parser.add_argument("--current-host", type=str, default=os.environ["SM_CURRENT_HOST"])
     parser.add_argument("--model-dir", type=str, default=os.environ["SM_MODEL_DIR"])
     parser.add_argument("--data-dir", type=str, default=os.environ["SM_CHANNEL_DATA"])
-    #parser.add_argument("--data-dir", type=str, default='.')
-
-    #parser.add_argument("--test", type=str, default=os.environ["SM_CHANNEL_TESTING"])
     parser.add_argument("--num-gpus", type=int, default=os.environ["SM_NUM_GPUS"])
     parser.add_argument("--num-cpus", type=int, default=os.environ["SM_NUM_CPUS"])
-    
-    #parser.add_argument("--num-gpus", type=int, default=False)
+    parser.add_argument("--save-model", type=int, default=1)
 
-
+    ## RUN
     args = parser.parse_args()
-
     train(args)
