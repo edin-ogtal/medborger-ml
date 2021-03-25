@@ -126,6 +126,8 @@ def test(model, eval_loader,device):
             else:
                 logits = model(b_input_ids, attention_mask=b_input_mask)   
 
+            _,preds = torch.max(logits, dim=1)
+
             predictions = torch.cat((predictions, preds))
             true_labels = torch.cat((true_labels, b_labels))
 
