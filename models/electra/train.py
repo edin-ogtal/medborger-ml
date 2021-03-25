@@ -60,7 +60,6 @@ def train(args):
         correct = 0
         print('Epoch', epoch)
         for step, batch in enumerate(train_loader):
-            print(step)
             b_input_ids = batch['input_ids'].to(device)
             b_input_mask = batch['attention_mask'].to(device)
             b_labels = batch['targets'].to(device)
@@ -74,6 +73,9 @@ def train(args):
             running_loss += loss.item() * b_input_ids.size(0)
             _, predicted = torch.max(logits, 1)
             correct += (predicted == b_labels).sum().item()
+
+            if args.verbose:
+                print(step)
 
         running_loss = running_loss/train_data.__len__()
         running_accuracy = 100*(correct/train_data.__len__())
@@ -153,6 +155,8 @@ if __name__ == "__main__":
     parser.add_argument("--num-gpus", type=int, default=os.environ["SM_NUM_GPUS"])
     parser.add_argument("--num-cpus", type=int, default=os.environ["SM_NUM_CPUS"])
     parser.add_argument("--save-model", type=int, default=1)
+
+    parser.add_argument("--verbose", type=int, default=1)
 
     ## RUN
     args = parser.parse_args()
