@@ -48,8 +48,8 @@ def train(args):
             eps = args.epsilon,
             weight_decay=args.weight_decay)
 
-    #loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([0.01,1.0,1.0])).to(device)
-    loss_fn = torch.nn.CrossEntropyLoss().to(device)
+    loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([0.01,1.0,1.0])).to(device)
+    #loss_fn = torch.nn.CrossEntropyLoss().to(device)
 
     # Train
     model.train()
