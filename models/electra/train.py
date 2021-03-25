@@ -1,5 +1,6 @@
 import argparse
 import logging
+import time
 import os
 import sys
 import torch
@@ -27,7 +28,10 @@ def train(args):
         device = 'cuda:0'
     else:
         device = 'cpu'
-    
+
+    for param in model.electra.parameters():
+        param.requires_grad = False
+
     model = model.to(device)
     if args.num_cpus > 1:
         model = torch.nn.DataParallel(model)
@@ -46,12 +50,13 @@ def train(args):
 
     loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([0.01,1.0,1.0])).to(device)
     #loss_fn = torch.nn.CrossEntropyLoss().to(device)
-
+   
     # Train
     model.train()
     # print(torch.cuda.memory_reserved())
 
     for epoch in range(1, args.epochs + 1):
+        e_start = time.time()
         running_loss = 0
         correct = 0
         print('Epoch', epoch)
@@ -60,8 +65,14 @@ def train(args):
             b_input_mask = batch['attention_mask'].to(device)
             b_labels = batch['targets'].to(device)
 
-            logits = model(b_input_ids, attention_mask=b_input_mask)
-            loss = loss_fn(logits.view(-1, args.num_labels), b_labels.view(-1))
+            if args.use_half_precision:
+                with torch.cuda.amp.autocast():
+                    logits = model(b_input_ids, attention_mask=b_input_mask)   
+                    loss = loss_fn(logits.view(-1, args.num_labels), b_labels.view(-1))
+            else:
+                logits = model(b_input_ids, attention_mask=b_input_mask)   
+                loss = loss_fn(logits.view(-1, args.num_labels), b_labels.view(-1))
+
             optimizer.zero_grad()
             loss.sum().backward()
             optimizer.step()
@@ -70,10 +81,14 @@ def train(args):
             _, predicted = torch.max(logits, 1)
             correct += (predicted == b_labels).sum().item()
 
+            if step == 5:
+                break
+
         running_loss = running_loss/train_data.__len__()
         running_accuracy = 100*(correct/train_data.__len__())
         print('Running loss', running_loss)
         print('Running accuracy', running_accuracy)
+        print(f'Finished epoch after {round(time.time() - e_start, 2)} seconds.')
 
     ## save model
     if args.save_model:
@@ -105,8 +120,13 @@ def test(model, eval_loader,device):
             b_input_mask = batch['attention_mask'].to(device)
             b_labels = batch['targets'].to(device)
 
-            logits = model(b_input_ids,b_input_mask)
-            _,preds = torch.max(logits, dim=1)
+            if args.use_half_precision:
+                with torch.cuda.amp.autocast():
+                    logits = model(b_input_ids, attention_mask=b_input_mask)   
+                    loss = loss_fn(logits.view(-1, args.num_labels), b_labels.view(-1))
+            else:
+                logits = model(b_input_ids, attention_mask=b_input_mask)   
+                loss = loss_fn(logits.view(-1, args.num_labels), b_labels.view(-1))
 
             predictions = torch.cat((predictions, preds))
             true_labels = torch.cat((true_labels, b_labels))
@@ -150,6 +170,7 @@ if __name__ == "__main__":
     parser.add_argument("--save-model", type=int, default=1)
 
     parser.add_argument("--verbose", type=int, default=1)
+    parser.add_argument("--use-half-precision", action='store_true')
 
     ## RUN
     args = parser.parse_args()
