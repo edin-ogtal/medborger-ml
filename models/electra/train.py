@@ -81,9 +81,6 @@ def train(args):
             _, predicted = torch.max(logits, 1)
             correct += (predicted == b_labels).sum().item()
 
-            if step == 5:
-                break
-
         running_loss = running_loss/train_data.__len__()
         running_accuracy = 100*(correct/train_data.__len__())
         print('Running loss', running_loss)
