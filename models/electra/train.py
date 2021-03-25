@@ -29,8 +29,8 @@ def train(args):
     else:
         device = 'cpu'
 
-    for param in model.electra.parameters():
-        param.requires_grad = False
+    # for param in model.electra.parameters():
+    #     param.requires_grad = False
 
     model = model.to(device)
     if args.num_cpus > 1:
@@ -48,8 +48,8 @@ def train(args):
             eps = args.epsilon,
             weight_decay=args.weight_decay)
 
-    loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([0.01,1.0,1.0])).to(device)
-    #loss_fn = torch.nn.CrossEntropyLoss().to(device)
+    #loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([0.01,1.0,1.0])).to(device)
+    loss_fn = torch.nn.CrossEntropyLoss().to(device)
    
     # Train
     model.train()
