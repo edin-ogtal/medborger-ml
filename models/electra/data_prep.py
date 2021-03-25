@@ -31,7 +31,7 @@ class MedborgerDataset(Dataset):
         }
 
 
-def get_data_loader(path,tokenizer,max_len,batch_size,num_workers):
+def get_data_loader(path,tokenizer,max_len,batch_size):
     dataset = pd.read_csv(path, sep='\t', names = ['targets', 'target_names', 'text', 'origin', 'main_text', 'secondary_text', 'source'])
     dataset = remove_invalid_inputs(dataset,'text')
 
@@ -43,7 +43,7 @@ def get_data_loader(path,tokenizer,max_len,batch_size,num_workers):
                     )
 
     sampler = RandomSampler(data)
-    dataloader = DataLoader(data,batch_size=batch_size,sampler=sampler,num_workers=num_workers,pin_memory=True)
+    dataloader = DataLoader(data,batch_size=batch_size,sampler=sampler,pin_memory=True)
     return dataloader,data
 
 
