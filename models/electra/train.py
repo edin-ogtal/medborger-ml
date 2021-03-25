@@ -123,10 +123,8 @@ def test(model, eval_loader,device):
             if args.use_half_precision:
                 with torch.cuda.amp.autocast():
                     logits = model(b_input_ids, attention_mask=b_input_mask)   
-                    loss = loss_fn(logits.view(-1, args.num_labels), b_labels.view(-1))
             else:
                 logits = model(b_input_ids, attention_mask=b_input_mask)   
-                loss = loss_fn(logits.view(-1, args.num_labels), b_labels.view(-1))
 
             predictions = torch.cat((predictions, preds))
             true_labels = torch.cat((true_labels, b_labels))
