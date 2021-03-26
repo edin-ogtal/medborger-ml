@@ -51,7 +51,7 @@ def train(args):
     #loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor([0.01,1.0,1.0])).to(device)
     loss_fn = torch.nn.CrossEntropyLoss().to(device)
    
-    # Train
+    #Train
     model.train()
     # print(torch.cuda.memory_reserved())
 
@@ -97,13 +97,13 @@ def train(args):
     predictions,true_labels,texts = test(model, eval_loader,device)
 
     # Export predictions to csv
-    obs = list()
-    for pred,true,text in zip(predictions,true_labels,texts):
-        d = {'predicted_label':pred,'true_label':true,'correct':true==pred,'text':text}
-        obs.append(d)
-    df = pd.DataFrame(obs)
-    data_path = os.path.join(args.data_dir,'predicted.csv')
-    df.to_csv(data_path,encoding='utf-8',sep='\t')
+    # obs = list()
+    # for pred,true,text in zip(predictions,true_labels,texts):
+    #     d = {'predicted_label':pred,'true_label':true,'correct':true==pred,'text':text}
+    #     obs.append(d)
+    # df = pd.DataFrame(obs)
+    # data_path = os.path.join(args.data_dir,'predicted.csv')
+    # df.to_csv(data_path,encoding='utf-8',sep='\t')
 
 def test(model, eval_loader,device):
     model.eval()
