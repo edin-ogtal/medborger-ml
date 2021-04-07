@@ -17,6 +17,7 @@ tokenizers = "*"
 datasets = "*"
 torch-optimizer = "*"
 torchvision = "*"
+tqdm = "*"
 
 [packages.db0fd96]
 file = "https://download.pytorch.org/whl/cu102/torch-1.7.1-cp38-cp38-linux_x86_64.whl"

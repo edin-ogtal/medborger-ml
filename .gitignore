@@ -143,3 +143,7 @@ data/
 *.pth
 *.code-workspace
 *.tar.gz
+
+*.bin
+*.out
+*.txt
