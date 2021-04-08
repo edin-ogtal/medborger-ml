@@ -147,3 +147,4 @@ data/
 *.bin
 *.out
 *.txt
+!*requirements.txt
